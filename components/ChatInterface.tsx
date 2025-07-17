@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
-import QRCode from 'qrcode.react';
+import { QRCodeComponent } from './QRCodeComponent';
 import type { MahaboteResult, HoroscopeSections, ChatMessage, UserInfo, ChatState } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { generateRandomAmount, generatePromptPayPayload, verifySlip } from '../services/paymentService';
@@ -214,7 +214,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
                 <div className="p-4 bg-slate-900/70 rounded-lg border border-amber-600/30 flex flex-col items-center gap-4 animate-fade-in">
                     <h4 className="font-bold text-amber-200 text-lg">{t('paymentForChat')}</h4>
                     <div className="p-4 bg-white rounded-lg shadow-lg">
-                        {paymentQRData && <QRCode value={paymentQRData} size={160} level="M" />}
+                        {paymentQRData && <QRCodeComponent value={paymentQRData} size={160} level="M" />}
                     </div>
                     <div className="text-center">
                         <p className="text-amber-200/80 text-sm">{t('amountToPay')}</p>
