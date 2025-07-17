@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
-import type { MahaboteResult, HoroscopeSections, ChatMessage } from '../types';
-import type { Language } from '../i18n';
+import type { MahaboteResult, HoroscopeSections, ChatMessage, UserInfo } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 
 
 // Component for a single message bubble
@@ -48,13 +48,13 @@ const TypingIndicator: React.FC<{ t: (key: string) => string }> = ({ t }) => (
 interface ChatInterfaceProps {
   result: MahaboteResult;
   horoscope: HoroscopeSections;
-  t: (key: string) => string;
-  lang: Language;
+  userInfo: UserInfo;
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope, t, lang }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope, userInfo }) => {
+  const { t, lang } = useLanguage();
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState('');
@@ -70,11 +70,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
   }, [messages]);
 
   useEffect(() => {
+    const fullName = `${userInfo.firstName} ${userInfo.middleName || ''} ${userInfo.lastName}`.trim();
+    const genderText = {
+        my: { male: 'ကျား', female: 'မ', other: 'အခြား' },
+        th: { male: 'ชาย', female: 'หญิง', other: 'อื่นๆ' }
+    };
+    
     const systemInstructionTemplates = {
         my: `သင်သည် တိုက်ရိုက်၊ တိကျစွာ ဟောပြောတတ်သော မဟာဘုတ်ဗေဒင်ဆရာမကြီးတစ်ဦးဖြစ်သည်။ သင်သည် အောက်ပါအချက်အလက်များအပေါ် အခြေခံ၍ အသုံးပြုသူအတွက် ဟောစာတမ်းတစ်ခုကို ပေးခဲ့ပြီးဖြစ်သည်။
 
+- အမည်: ${fullName}
+- ကျား/မ: ${genderText.my[userInfo.gender]}
 - မွေးနေ့: ${result.dayInfo.name.my}
-- ဘုခ်: ${result.houseInfo.name.my}
 - အကျဉ်းချုပ်ဟောစာတမ်း:
   - အထူးသတိပေးချက်: ${horoscope.warning}
   - စရိုက်: ${horoscope.personality}
@@ -87,8 +94,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
 သင်၏တာဝန်မှာ- သင်၏အဖြေများသည် တိုတုတ်၊ တိကျပြီး တိုက်ရိုက်ဖြစ်ရမည်။ အသုံးပြုသူကို ကလေးတစ်ယောက်လို ဆက်ဆံခြင်းကို ရှောင်ကြဉ်ပါ။ သူတို့၏မေးခွန်းများကို ရိုးသားစွာနှင့် တိုက်ရိုက်ဖြေဆိုပါ၊ အဖြေသည် ကြမ်းတမ်းသည်ဟု ထင်ရလျှင်ပင် ဖြေဆိုပါ။ သင်၏အလုပ်မှာ အမှန်တရားကို ပြောရန်ဖြစ်ပြီး အားပေးစကားချည်း ပြောရန်မဟုတ်ပါ။`,
         th: `คุณคือโหรหญิงพม่าผู้เชี่ยวชาญด้านมหาโปตะที่พูดจาตรงไปตรงมาและมีประสบการณ์สูง คุณได้ให้คำทำนายแก่ผู้ใช้โดยอิงจากข้อมูลต่อไปนี้:
 
+- ชื่อ: ${fullName}
+- เพศ: ${genderText.th[userInfo.gender]}
 - วันเกิด: ${result.dayInfo.name.th}
-- ภพ: ${result.houseInfo.name.th}
 - คำทำนายสรุป:
   - คำเตือนพิเศษ: ${horoscope.warning}
   - นิสัย: ${horoscope.personality}
@@ -110,7 +118,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
 
     setChat(newChat);
     setMessages([{ role: 'model', text: t('chatInitialMessage') }]);
-  }, [result, horoscope, lang, t]);
+  }, [result, horoscope, lang, t, userInfo]);
 
   const sendMessageToApi = async (messageText: string) => {
     if (!chat) return;

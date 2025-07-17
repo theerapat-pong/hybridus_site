@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { UpArrowIcon } from './Icons';
 
-interface ScrollToTopButtonProps {
-    t: (key: string) => string;
-}
-
-export const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({ t }) => {
+export const ScrollToTopButton: React.FC = () => {
+    const { t } = useLanguage();
     const [isVisible, setIsVisible] = useState(false);
 
     const toggleVisibility = () => {
@@ -40,9 +39,7 @@ export const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({ t }) => {
                 isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
             }`}
         >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-            </svg>
+            <UpArrowIcon />
         </button>
     );
 };

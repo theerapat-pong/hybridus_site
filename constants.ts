@@ -1,5 +1,5 @@
 
-import type { DayOfWeek, House } from './types';
+import type { DayOfWeek } from './types';
 
 export const DAYS_OF_WEEK: { [key: number]: DayOfWeek } = {
   0: { name: { my: 'တနင်္ဂနွေ', th: 'วันอาทิตย์' }, animal: { my: 'ဂဠုန်', th: 'ครุฑ' }, planet: { my: 'နေ', th: 'อาทิตย์' }, icon: '☀️' },
@@ -10,14 +10,4 @@ export const DAYS_OF_WEEK: { [key: number]: DayOfWeek } = {
   5: { name: { my: 'ကြာသပတေး', th: 'วันพฤหัสบดี' }, animal: { my: 'ကြွက်', th: 'หนู' }, planet: { my: 'ကြာသပတေး', th: 'พฤหัสบดี' }, icon: '🐭' },
   6: { name: { my: 'သောကြာ', th: 'วันศุกร์' }, animal: { my: 'ပူး', th: 'หนูตะเภา' }, planet: { my: 'သောကြာ', th: 'ศุกร์' }, icon: '🐹' },
   7: { name: { my: 'စနေ', th: 'วันเสาร์' }, animal: { my: 'နဂါး', th: 'นาค' }, planet: { my: 'စနေ', th: 'เสาร์' }, icon: '🐉' }
-};
-
-export const HOUSES: { [key: number]: House } = {
-  0: { name: { my: 'ဘင်္ဂ', th: 'ภังคะ' }, meaning: { my: 'ပျက်စီးခြင်း၊ ကံဆိုးခြင်း', th: 'ความเสื่อม, โชคร้าย' } },
-  1: { name: { my: 'အထွန်း', th: 'อัฐะ' }, meaning: { my: 'ထွန်းတောက်ခြင်း၊ အောင်မြင်ခြင်း', th: 'ความรุ่งโรจน์, ความสำเร็จ' } },
-  2: { name: { my: 'ရာဇ', th: 'ราชา' }, meaning: { my: 'ဘုန်းတန်ခိုး၊ အာဏာ', th: 'อำนาจ, วาสนา' } },
-  3: { name: { my: 'အဓိပတိ', th: 'อธิบดี' }, meaning: { my: 'ခေါင်းဆောင်၊ ပြီးမြောက်ခြင်း', th: 'ความเป็นใหญ่, ความสมบูรณ์' } },
-  4: { name: { my: 'မရဏ', th: 'มรณะ' }, meaning: { my: 'သေခြင်း၊ ဆင်းရဲဒုက္ခကြီးခြင်း', th: 'ความตาย, ความทุกข์ยาก' } },
-  5: { name: { my: 'သိုက်', th: 'สိုက်' }, meaning: { my: 'ဥစ္စာဓန၊ ကြွယ်ဝချမ်းသာခြင်း', th: 'ทรัพย์สมบัติ, ความมั่งคั่ง' } },
-  6: { name: { my: 'ပုတိ', th: 'ปูติ' }, meaning: { my: 'ပဋိပက္ခ၊ အငြင်းပွားခြင်း', th: 'ความขัดแย้ง, การทะเลาะวิวาท' } }
 };
