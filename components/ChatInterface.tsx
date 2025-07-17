@@ -10,7 +10,7 @@ const OMISE_PUBLIC_KEY = 'pkey_test_64ejij4yiecx24skte8';
 // This is for demonstration purposes only in an environment without a backend.
 // In a real application, the token should be sent to a server, 
 // and the server would make the charge request using the secret key.
-const OMISE_SECRET_KEY = 'skey_test_64ejij5gw9snd8j2vxd';
+// const OMISE_SECRET_KEY = '';
 
 // Add type for Omise for the global window object
 declare global {
@@ -167,36 +167,35 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
   const createCharge = async (token: string) => {
     setIsPaying(true);
     try {
-        const response = await fetch('https://api.omise.co/charges', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Basic ${btoa(OMISE_SECRET_KEY + ':')}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                description: `Mahabote Chat Question - ${new Date().toISOString()}`,
-                amount: 500,
-                currency: 'THB',
-                card: token
-            })
-        });
+      const response = await fetch('/api/omise-charge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: `Mahabote Chat Question - ${new Date().toISOString()}`,
+          amount: 500,
+          currency: 'THB',
+          token
+        })
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok && (data.status === 'successful' || data.status === 'pending')) {
-            setHasCredit(true);
-            setTimeout(() => inputRef.current?.focus(), 100);
-        } else {
-            console.error('Payment failed:', data);
-            const errorMessage: ChatMessage = { role: 'model', text: t('chatPaymentError') };
-            setMessages(prev => [...prev, errorMessage]);
-        }
-    } catch (error) {
-        console.error('Error creating charge:', error);
+      if (response.ok && (data.status === 'successful' || data.status === 'pending')) {
+        setHasCredit(true);
+        setTimeout(() => inputRef.current?.focus(), 100);
+      } else {
+        console.error('Payment failed:', data);
         const errorMessage: ChatMessage = { role: 'model', text: t('chatPaymentError') };
         setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('Error creating charge:', error);
+      const errorMessage: ChatMessage = { role: 'model', text: t('chatPaymentError') };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-        setIsPaying(false);
+      setIsPaying(false);
     }
   };
 
