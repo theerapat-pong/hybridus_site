@@ -59,6 +59,21 @@ export const translations = {
     lineLife: 'အသက်လမ်းကြောင်း',
     lineFate: 'ကံလမ်းကြောင်း',
     errorImageSize: 'ဓာတ်ပုံအရွယ်အစားသည် 4MB ထက်ငယ်ရမည်။',
+    
+    // Payment
+    payToAskButton: 'မေးခွန်းမေးရန် ၅ ဘတ် ပေးချေပါ',
+    paymentInstruction: '{amount} ဘတ် အတိအကျ ပေးချေရန် QR ကိုစကင်ဖတ်ပါ။',
+    uploadSlipButton: 'ငွေလွှဲပြေစာ တင်ပါ',
+    verifyingSlip: 'ငွေလွှဲပြေစာကို စစ်ဆေးနေသည်...',
+    verificationSuccess: 'ငွေပေးချေမှု အောင်မြင်ပါသည်! သင်သည် မေးခွန်းတစ်ခု မေးနိုင်ပါပြီ။',
+    errorVerificationFailed: 'ငွေလွှဲပြေစာ စစ်ဆေးခြင်း မအောင်မြင်ပါ။ ထပ်မံကြိုးစားပါ။',
+    errorAmountMismatch: 'ပြေစာပါ ငွေပမာဏသည် ပေးချေရမည့် ({amount} ဘတ်) နှင့် မตรงပါ။',
+    errorDuplicateSlip: 'ဤပြေစာကို အသုံးပြုပြီးဖြစ်သည်။ အသစ်တစ်ခု အသုံးပြုပါ။',
+    errorInvalidSlip: 'ပုံသည် မှားယွင်းနေသည် သို့မဟုတ် ငွေလွှဲပြေစာ မဟုတ်ပါ။',
+    cancelPayment: 'ပယ်ဖျက်မည်',
+    paymentForChat: 'မေးခွန်း ၁ ခုအတွက် ဝန်ဆောင်ခ',
+    amountToPay: 'ပေးချေရန် ငွေပမာဏ',
+    scanToPay: 'ငွေပေးချေရန် စကင်ဖတ်ပါ',
 
     // Cookie Consent
     cookieConsentMessage: 'ကျွန်ုပ်တို့သည် သင့်အတွေ့အကြုံကို ပိုမိုကောင်းမွန်စေရန်အတွက် ကွတ်ကီးများကို အသုံးပြုပါသည်။',
@@ -140,6 +155,21 @@ export const translations = {
     lineLife: 'เส้นชีวิต',
     lineFate: 'เส้นวาสนา',
     errorImageSize: 'ขนาดรูปภาพต้องไม่เกิน 4MB',
+
+    // Payment
+    payToAskButton: 'ชำระ 5 บาทเพื่อถามคำถาม',
+    paymentInstruction: 'กรุณาสแกน QR เพื่อชำระเงินจำนวน {amount} บาทพอดี',
+    uploadSlipButton: 'อัปโหลดสลิป',
+    verifyingSlip: 'กำลังตรวจสอบสลิป...',
+    verificationSuccess: 'ชำระเงินสำเร็จ! ท่านสามารถถามได้ 1 คำถาม',
+    errorVerificationFailed: 'การตรวจสอบสลิปล้มเหลว กรุณาลองใหม่',
+    errorAmountMismatch: 'ยอดเงินในสลิปไม่ตรงกับยอดที่ต้องชำระ ({amount} บาท)',
+    errorDuplicateSlip: 'สลิปนี้ถูกใช้งานแล้ว กรุณาใช้สลิปใหม่',
+    errorInvalidSlip: 'รูปภาพไม่ถูกต้องหรือไม่ใช่สลิป',
+    cancelPayment: 'ยกเลิก',
+    paymentForChat: 'ค่าบริการสำหรับ 1 คำถาม',
+    amountToPay: 'ยอดชำระ',
+    scanToPay: 'สแกนเพื่อชำระ',
     
     // Cookie Consent
     cookieConsentMessage: 'เราใช้คุกกี้เพื่อปรับปรุงประสบการณ์ของคุณ',

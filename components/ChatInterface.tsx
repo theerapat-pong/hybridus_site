@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
-import type { MahaboteResult, HoroscopeSections, ChatMessage, UserInfo } from '../types';
+import QRCode from 'qrcode.react';
+import type { MahaboteResult, HoroscopeSections, ChatMessage, UserInfo, ChatState } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
-
+import { generateRandomAmount, generatePromptPayPayload, verifySlip } from '../services/paymentService';
+import { UploadIcon } from './Icons';
 
 // Component for a single message bubble
 const MessageBox: React.FC<{ message: ChatMessage }> = ({ message }) => {
@@ -60,10 +62,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
   const [userInput, setUserInput] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  // Payment flow state
+  const [chatState, setChatState] = useState<ChatState>('locked');
+  const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
+  const [paymentQRData, setPaymentQRData] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  
+  const uploadSlipRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only scroll when new messages are added, not on initial component load.
     if (messages.length > 1) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -121,7 +129,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
   }, [result, horoscope, lang, t, userInfo]);
 
   const sendMessageToApi = async (messageText: string) => {
-    if (!chat) return;
+    if (!chat || chatState !== 'unlocked') return;
 
     const userMessage: ChatMessage = { role: 'user', text: messageText };
     setMessages(prev => [...prev, userMessage]);
@@ -138,7 +146,48 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsSending(false);
+      setChatState('locked'); // Re-lock chat for next question
     }
+  };
+
+  const handleStartPayment = () => {
+    const amount = generateRandomAmount();
+    const payload = generatePromptPayPayload(amount);
+    setPaymentAmount(amount);
+    setPaymentQRData(payload);
+    setPaymentError(null);
+    setChatState('awaiting_payment');
+  };
+
+  const handleCancelPayment = () => {
+    setPaymentAmount(null);
+    setPaymentQRData(null);
+    setPaymentError(null);
+    setChatState('locked');
+  };
+
+  const handleSlipUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file || !paymentAmount) return;
+      
+      setChatState('verifying');
+      setPaymentError(null);
+
+      const result = await verifySlip(file, paymentAmount);
+
+      if (result.success) {
+          setChatState('unlocked');
+      } else {
+          const errorMessage = t((result.errorKey || 'errorVerificationFailed') as any, { 
+              amount: paymentAmount.toFixed(2) 
+          });
+          setPaymentError(errorMessage);
+          setChatState('awaiting_payment');
+      }
+      // Reset file input so user can upload the same file again if needed
+      if(uploadSlipRef.current) {
+        uploadSlipRef.current.value = "";
+      }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -146,6 +195,83 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
     if (!userInput.trim() || isSending || !chat) return;
     sendMessageToApi(userInput.trim());
   };
+
+  const renderPaymentFlow = () => {
+    const baseButtonStyles = "w-full flex items-center justify-center py-3 px-4 bg-amber-600 text-slate-900 text-base font-bold rounded-lg shadow-md hover:bg-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50";
+
+    switch(chatState) {
+        case 'locked':
+            return (
+                <div className="p-4 bg-slate-900/50 rounded-lg text-center">
+                    <button onClick={handleStartPayment} className={baseButtonStyles}>
+                        {t('payToAskButton')}
+                    </button>
+                </div>
+            );
+
+        case 'awaiting_payment':
+            return (
+                <div className="p-4 bg-slate-900/70 rounded-lg border border-amber-600/30 flex flex-col items-center gap-4 animate-fade-in">
+                    <h4 className="font-bold text-amber-200 text-lg">{t('paymentForChat')}</h4>
+                    <div className="p-4 bg-white rounded-lg shadow-lg">
+                        {paymentQRData && <QRCode value={paymentQRData} size={160} level="M" />}
+                    </div>
+                    <div className="text-center">
+                        <p className="text-amber-200/80 text-sm">{t('amountToPay')}</p>
+                        <p className="text-amber-50 font-bold text-2xl tracking-wider">{paymentAmount?.toFixed(2)} THB</p>
+                    </div>
+                     <p className="text-amber-200 text-center text-sm">{t('paymentInstruction', { amount: paymentAmount?.toFixed(2) })}</p>
+                    
+                    <input type="file" accept="image/*" ref={uploadSlipRef} onChange={handleSlipUpload} className="hidden" />
+                    <button onClick={() => uploadSlipRef.current?.click()} className={`${baseButtonStyles} w-full md:w-auto`}>
+                        <UploadIcon /> {t('uploadSlipButton')}
+                    </button>
+                    
+                    {paymentError && <p className="text-red-400 text-center animate-fade-in">{paymentError}</p>}
+
+                    <button onClick={handleCancelPayment} className="text-sm text-amber-300/70 hover:text-amber-300 transition-colors">
+                        {t('cancelPayment')}
+                    </button>
+                </div>
+            );
+            
+        case 'verifying':
+            return (
+                <div className="p-4 bg-slate-900/50 rounded-lg text-center flex items-center justify-center gap-3">
+                    <svg className="animate-spin h-5 w-5 text-amber-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-amber-200 font-semibold">{t('verifyingSlip')}</span>
+                </div>
+            );
+
+        case 'unlocked':
+            return (
+                 <form onSubmit={handleSubmit} className="flex gap-2">
+                    <input
+                        type="text"
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder={t('chatPlaceholder')}
+                        disabled={isSending}
+                        className="flex-grow p-3 bg-slate-900/70 border border-amber-600/50 rounded-md text-amber-50 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition disabled:opacity-50"
+                        aria-label={t('chatPlaceholder')}
+                    />
+                    <button
+                        type="submit"
+                        disabled={isSending || !userInput.trim()}
+                        className="py-3 px-6 bg-amber-600 text-slate-900 font-bold rounded-lg shadow-md hover:bg-amber-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
+                        aria-label={t('chatSendButton')}
+                    >
+                        {t('chatSendButton')}
+                    </button>
+                </form>
+            )
+        default:
+             return null;
+    }
+  }
 
 
   return (
@@ -163,25 +289,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
         </div>
         
         <div className="mt-4">
-            <form onSubmit={handleSubmit} className="flex gap-2">
-                <input
-                    type="text"
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    placeholder={t('chatPlaceholder')}
-                    disabled={isSending}
-                    className="flex-grow p-3 bg-slate-900/70 border border-amber-600/50 rounded-md text-amber-50 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition disabled:opacity-50"
-                    aria-label={t('chatPlaceholder')}
-                />
-                <button
-                    type="submit"
-                    disabled={isSending || !userInput.trim()}
-                    className="py-3 px-6 bg-amber-600 text-slate-900 font-bold rounded-lg shadow-md hover:bg-amber-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
-                    aria-label={t('chatSendButton')}
-                >
-                    {t('chatSendButton')}
-                </button>
-            </form>
+            {renderPaymentFlow()}
         </div>
       </div>
   );

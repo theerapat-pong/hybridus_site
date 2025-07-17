@@ -45,6 +45,9 @@ export interface ChatMessage {
   text: string;
 }
 
+export type ChatState = 'locked' | 'awaiting_payment' | 'verifying' | 'unlocked';
+
+
 // Types for Palm Reading
 export interface PalmPoint {
   x: number;
