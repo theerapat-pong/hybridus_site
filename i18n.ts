@@ -13,7 +13,7 @@ export const translations = {
     calculating: 'ဟောစာတမ်းတွက်ချက်နေပါသည်...',
     resetButton: 'ပြန်လည်စတင်ရန်',
     resultTitle: 'သင်၏ ကံကြမ္မာအဖြေ',
-    resultSubtitle: 'မဟာဘုတ်တွက်ချက်မှုရလဒ์',
+    resultSubtitle: 'မဟာဘုတ်တွက်ချက်မှုရလဒ်',
     infoBirthDay: 'မွေးနေ့',
     infoYearCalcTitle: 'တွက်ချက်သည့်နှစ်',
     infoYearCalcContent: 'ခရစ်နှစ် {gregorian} → မြန်မာသက္ကရာဇ် {burmese}',
@@ -53,7 +53,7 @@ export const translations = {
     tryAgainPalmButton: 'နောက်တစ်ခေါက် ကြိုးစားကြည့်ပါ',
     imagePreview: 'ရွေးချယ်ထားသော ဓာတ်ပုံ',
     analyzeButton: 'သုံးသပ်ခိုင်းရန်',
-    lineLegendTitle: 'สัญลักษณ์เส้นลายมือ',
+    lineLegendTitle: 'လက်ခဏာလမ်းကြောင်းများ',
     lineHeart: 'နှလုံးလမ်းကြောင်း',
     lineHead: 'ဦးခေါင်းလမ်းကြောင်း',
     lineLife: 'အသက်လမ်းကြောင်း',
@@ -65,7 +65,7 @@ export const translations = {
     cookieConsentAccept: 'လက်ခံသည်',
 
     // Footer and Legal
-    aiDisclaimer: 'การทำนายและวิเคราะห์ทำโดย AI ข้อมูลอาจคลาดเคลื่อน',
+    aiDisclaimer: 'ဟောစာတမ်းနှင့် ခွဲခြမ်းစိတ်ဖြာချက်များကို AI မှပြုလုပ်ထားပြီး အချက်အလက်များ တိကျမှုမရှိနိုင်ပါ။',
     termsLink: 'ဝန်ဆောင်မှုစည်းမျဉ်းများ',
     privacyLink: 'ကိုယ်ရေးကိုယ်တာမူဝါဒ',
     cookieLink: 'ကွတ်ကီးမူဝါဒ',
