@@ -8,6 +8,12 @@
     "api/verify-slip.ts": {
       "maxDuration": 30
     },
+    "api/verify-slip-v2.ts": {
+      "maxDuration": 30
+    },
+    "api/verify-slip-v3.ts": {
+      "maxDuration": 30
+    },
     "api/debug-slip.ts": {
       "maxDuration": 30
     },

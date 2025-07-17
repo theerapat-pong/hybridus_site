@@ -4,12 +4,25 @@ const SLIPOK_BRANCH_ID = '49571';
 const SLIPOK_API_KEY = 'SLIPOKE0ICAL1';
 const SLIPOK_API_URL = `https://api.slipok.com/api/line/apikey/${SLIPOK_BRANCH_ID}`;
 
-// Disable default body parser to handle multipart data
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+// Function to collect request body as Buffer
+function collectRequestBody(req: VercelRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      resolve(Buffer.concat(chunks));
+    });
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
@@ -17,18 +30,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // Only allow POST method
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log('Proxying request to SlipOK API...');
+    console.log('Processing request to SlipOK API...');
     
     // Get content type from request
     const contentType = req.headers['content-type'];
@@ -36,63 +47,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Content-Type must be multipart/form-data' });
     }
 
-    // Convert Node.js request to a ReadableStream for fetch
-    const body = new ReadableStream({
-      start(controller) {
-        req.on('data', (chunk) => {
-          controller.enqueue(chunk);
-        });
-        req.on('end', () => {
-          controller.close();
-        });
-        req.on('error', (err) => {
-          controller.error(err);
-        });
-      }
-    });
+    console.log('Content-Type:', contentType);
 
-    // Forward the request body to SlipOK API with duplex option
+    // Collect the request body
+    const bodyBuffer = await collectRequestBody(req);
+    console.log('Body buffer size:', bodyBuffer.length);
+
+    // Forward to SlipOK API using fetch with proper options
     const response = await fetch(SLIPOK_API_URL, {
       method: 'POST',
       headers: {
         'x-authorization': SLIPOK_API_KEY,
         'content-type': contentType,
+        'content-length': bodyBuffer.length.toString(),
       },
-      body: body,
-      duplex: 'half', // Required for Node.js 18+
-    } as RequestInit);
+      body: new Uint8Array(bodyBuffer),
+      // @ts-ignore - duplex is required for Node.js 18+
+      duplex: 'half',
+    });
 
-    console.log('SlipOK API responded with status:', response.status);
+    console.log('SlipOK API Response Status:', response.status);
 
-    // Check if response is JSON
+    // Parse response
     const responseContentType = response.headers.get('content-type');
     let result;
     
     if (responseContentType && responseContentType.includes('application/json')) {
       result = await response.json();
+      console.log('SlipOK API Response Data:', result);
     } else {
       const textResult = await response.text();
       console.log('Non-JSON response from SlipOK:', textResult);
-      return res.status(500).json({ 
+      return res.status(response.status).json({ 
         error: 'SlipOK API returned non-JSON response',
-        response: textResult 
+        response: textResult,
+        status: response.status
       });
     }
-    
-    console.log('SlipOK API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      data: result
-    });
 
     // Return the result to client with same status code
     return res.status(response.status).json(result);
 
   } catch (error) {
-    console.error('Error in verify-slip API:', error);
+    console.error('Error in verify-slip-v3 API:', error);
     return res.status(500).json({ 
       error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 }

@@ -3,7 +3,7 @@ import generatePayload from 'promptpay-qr';
 const E_WALLET_ID = '004999036911146';
 
 // Use our API route to handle SlipOK API calls (avoids CORS issues)
-const VERIFY_SLIP_URL = '/api/verify-slip';
+const VERIFY_SLIP_URL = '/api/verify-slip-v3';
 
 export interface VerificationResult {
     success: boolean;
