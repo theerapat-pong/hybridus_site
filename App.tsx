@@ -169,7 +169,6 @@ const App: React.FC = () => {
         {renderPage()}
         
         <footer className="text-center mt-12 text-amber-500/60 text-sm">
-          <p className="mb-4 text-amber-200/80 font-semibold border border-amber-500/20 bg-slate-800/30 rounded-md p-2 max-w-md mx-auto">{t('aiDisclaimer')}</p>
           <div className="flex justify-center items-center gap-x-4 mb-3">
               <button onClick={() => setActivePage('terms')} className="hover:text-amber-300 transition-colors">{t('termsLink')}</button>
               <span className="text-amber-500/40">•</span>

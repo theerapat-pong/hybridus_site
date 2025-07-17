@@ -1,6 +1,6 @@
 {
-  "name": "မဟာဘုတ် ဗေဒင် (Mahabote Astrology)",
-  "description": "แอปพลิเคชันโหราศาสตร์มหาโปตะพม่าที่ให้คำทำนายดวงชะตาส่วนบุคคลตามวันเกิดของผู้ใช้ และสามารถทำนายลายมือได้โดยใช้ Gemini API รองรับภาษาไทยและภาษาพม่า (An application for Burmese Mahabote astrology that provides personalized horoscope readings based on the user's date of birth and palmistry, using Gemini API for generating the predictions. Supports Thai and Burmese languages.)",
+  "name": "Hybridus",
+  "description": "แอปพลิเคชันโหราศาสตร์มหาโปตะพม่าที่ให้คำทำนายดวงชะตาส่วนบุคคลตามวันเกิดของผู้ใช้ และสามารถทำนายลายมือได้ รองรับภาษาไทยและภาษาพม่า (An application for Burmese Mahabote astrology that provides personalized horoscope readings based on the user's date of birth and palmistry. Supports Thai and Burmese languages.)",
   "requestFramePermissions": [
     "camera"
   ],
