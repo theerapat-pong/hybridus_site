@@ -29,13 +29,21 @@ const styles = `
     0%, 100% { opacity: 0; transform: scale(0.5); }
     50% { opacity: 1; transform: scale(1.2); }
 }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
 `;
 
 export const CrystalBallSpinner: React.FC = () => {
     return (
         <>
             <style>{styles}</style>
-            <div className="flex flex-col items-center justify-center">
+            <div 
+              className="flex flex-col items-center justify-center"
+              style={{ animation: 'float 5s ease-in-out infinite' }}
+            >
                 <div 
                     className="relative w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-amber-300/30"
                     style={{
@@ -48,23 +56,33 @@ export const CrystalBallSpinner: React.FC = () => {
                         className="absolute top-1/2 left-1/2 w-[180%] h-[180%]"
                         style={{
                             background: 'radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 60%)',
-                            animation: 'crystal-ball-swirl 10s linear infinite',
+                            animation: 'crystal-ball-swirl 12s linear infinite',
                         }}
                     ></div>
                     <div 
                         className="absolute top-1/2 left-1/2 w-[150%] h-[150%]"
                         style={{
                              background: 'radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0) 50%)',
-                             animation: 'crystal-ball-swirl 15s linear infinite reverse',
+                             animation: 'crystal-ball-swirl 18s linear infinite reverse',
+                        }}
+                    ></div>
+                    <div 
+                        className="absolute top-1/2 left-1/2 w-[200%] h-[200%]"
+                        style={{
+                             background: 'radial-gradient(circle, rgba(160, 190, 255, 0.1) 0%, rgba(160, 190, 255, 0) 60%)',
+                             animation: 'crystal-ball-swirl 25s linear infinite',
                         }}
                     ></div>
                      {/* Sparkles */}
-                    <span className="absolute w-1 h-1 bg-white rounded-full top-[20%] left-[50%]" style={{ animation: 'sparkle 3s infinite ease-in-out', animationDelay: '0s' }}></span>
-                    <span className="absolute w-2 h-2 bg-white rounded-full top-[40%] left-[25%]" style={{ animation: 'sparkle 4s infinite ease-in-out', animationDelay: '0.5s' }}></span>
-                    <span className="absolute w-1 h-1 bg-white rounded-full top-[75%] left-[30%]" style={{ animation: 'sparkle 3.5s infinite ease-in-out', animationDelay: '1s' }}></span>
-                    <span className="absolute w-2 h-2 bg-white rounded-full top-[60%] left-[75%]" style={{ animation: 'sparkle 2.5s infinite ease-in-out', animationDelay: '1.5s' }}></span>
-                    <span className="absolute w-1 h-1 bg-white rounded-full top-[30%] left-[80%]" style={{ animation: 'sparkle 4.5s infinite ease-in-out', animationDelay: '2s' }}></span>
-
+                    <span className="absolute w-1 h-1 bg-white rounded-full top-[20%] left-[50%]" style={{ animation: 'sparkle 3.2s infinite ease-in-out', animationDelay: '0s' }}></span>
+                    <span className="absolute w-2 h-2 bg-white rounded-full top-[40%] left-[25%]" style={{ animation: 'sparkle 4.1s infinite ease-in-out', animationDelay: '0.5s' }}></span>
+                    <span className="absolute w-1 h-1 bg-white rounded-full top-[75%] left-[30%]" style={{ animation: 'sparkle 3.6s infinite ease-in-out', animationDelay: '1.2s' }}></span>
+                    <span className="absolute w-2 h-2 bg-white rounded-full top-[60%] left-[75%]" style={{ animation: 'sparkle 2.8s infinite ease-in-out', animationDelay: '1.8s' }}></span>
+                    <span className="absolute w-1 h-1 bg-white rounded-full top-[30%] left-[80%]" style={{ animation: 'sparkle 4.5s infinite ease-in-out', animationDelay: '2.1s' }}></span>
+                    <span className="absolute w-1 h-1 bg-white rounded-full top-[85%] left-[55%]" style={{ animation: 'sparkle 3s infinite ease-in-out', animationDelay: '0.8s' }}></span>
+                    <span className="absolute w-2 h-2 bg-white rounded-full top-[55%] left-[45%]" style={{ animation: 'sparkle 4.2s infinite ease-in-out', animationDelay: '2.5s' }}></span>
+                    <span className="absolute w-1 h-1 bg-white rounded-full top-[15%] left-[18%]" style={{ animation: 'sparkle 3.7s infinite ease-in-out', animationDelay: '3.1s' }}></span>
+                    <span className="absolute w-1 h-1 bg-white rounded-full top-[70%] left-[85%]" style={{ animation: 'sparkle 3.3s infinite ease-in-out', animationDelay: '1.5s' }}></span>
                 </div>
                 {/* Base of the crystal ball */}
                 <div 
