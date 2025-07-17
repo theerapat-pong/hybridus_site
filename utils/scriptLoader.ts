@@ -1,3 +1,14 @@
+// Add type declaration for Omise on the window object
+declare global {
+  interface Window {
+    Omise?: {
+      // The script loader only checks for `checkout`'s existence.
+      // In a full implementation, you'd define `configure`, `open`, `createToken`, etc.
+      checkout?: object;
+    };
+  }
+}
+
 // A global promise to avoid re-injecting the script
 let omiseScriptPromise: Promise<void> | null = null;
 const SCRIPT_URL = 'https://cdn.omise.co/omise.js';

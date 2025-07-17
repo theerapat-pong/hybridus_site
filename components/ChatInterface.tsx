@@ -2,22 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import type { MahaboteResult, HoroscopeSections, ChatMessage } from '../types';
 import type { Language } from '../i18n';
-import { Spinner } from './Spinner';
-import { loadOmiseScript } from '../utils/scriptLoader';
-
-const OMISE_PUBLIC_KEY = 'pkey_test_64ejij4yiecx24skte8';
-// WARNING: The secret key should never be exposed in client-side code.
-// This is for demonstration purposes only in an environment without a backend.
-// In a real application, the token should be sent to a server, 
-// and the server would make the charge request using the secret key.
-// const OMISE_SECRET_KEY = '';
-
-// Add type for Omise for the global window object
-declare global {
-    interface Window {
-        Omise: any;
-    }
-}
 
 
 // Component for a single message bubble
@@ -60,21 +44,6 @@ const TypingIndicator: React.FC<{ t: (key: string) => string }> = ({ t }) => (
     </div>
 );
 
-const OmiseStatusIndicator: React.FC<{ status: 'loading' | 'ready' | 'error', t: (key: string) => string }> = ({ status, t }) => {
-    const statusMap = {
-        loading: { text: t('omiseStatusConnecting'), className: 'text-amber-400' },
-        ready: { text: t('omiseStatusReady'), className: 'text-green-400' },
-        error: { text: t('omiseStatusError'), className: 'text-red-400' },
-    };
-    const currentStatus = statusMap[status];
-
-    return (
-        <div className={`text-xs text-center mb-2 h-4 ${currentStatus.className}`}>
-            {currentStatus.text}
-        </div>
-    );
-};
-
 
 interface ChatInterfaceProps {
   result: MahaboteResult;
@@ -90,36 +59,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [hasCredit, setHasCredit] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
-  const [omiseStatus, setOmiseStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setOmiseStatus('loading');
-    loadOmiseScript()
-      .then(() => {
-        try {
-          window.Omise.setPublicKey(OMISE_PUBLIC_KEY);
-          setOmiseStatus('ready');
-        } catch (e) {
-          console.error("Error setting Omise public key:", e);
-          setOmiseStatus('error');
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-        setOmiseStatus('error');
-      });
-  }, []);
-
-  useEffect(() => {
-    if (isSending) {
+    // Only scroll when new messages are added, not on initial component load.
+    if (messages.length > 1) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [isSending]);
+  }, [messages]);
 
   useEffect(() => {
     const systemInstructionTemplates = {
@@ -164,64 +112,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
     setMessages([{ role: 'model', text: t('chatInitialMessage') }]);
   }, [result, horoscope, lang, t]);
 
-  const createCharge = async (token: string) => {
-    setIsPaying(true);
-    try {
-      const response = await fetch('/api/omise-charge', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: `Mahabote Chat Question - ${new Date().toISOString()}`,
-          amount: 500,
-          currency: 'THB',
-          token
-        })
-      });
+  const sendMessageToApi = async (messageText: string) => {
+    if (!chat) return;
 
-      const data = await response.json();
-
-      if (response.ok && (data.status === 'successful' || data.status === 'pending')) {
-        setHasCredit(true);
-        setTimeout(() => inputRef.current?.focus(), 100);
-      } else {
-        console.error('Payment failed:', data);
-        const errorMessage: ChatMessage = { role: 'model', text: t('chatPaymentError') };
-        setMessages(prev => [...prev, errorMessage]);
-      }
-    } catch (error) {
-      console.error('Error creating charge:', error);
-      const errorMessage: ChatMessage = { role: 'model', text: t('chatPaymentError') };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsPaying(false);
-    }
-  };
-
-  const triggerPayment = () => {
-    if (omiseStatus !== 'ready' || !window.Omise || !window.Omise.checkout) {
-        console.error('triggerPayment called but Omise checkout is not ready.');
-        return;
-    }
-    
-    window.Omise.checkout.open({
-        amount: 500,
-        currency: 'THB',
-        frameLabel: t('appTitle'),
-        frameDescription: t('paymentModalTitle'),
-        submitLabel: t('paymentConfirmButton'),
-        onCreateTokenSuccess: (token: string) => {
-            createCharge(token);
-        },
-    });
-  };
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userInput.trim() || isSending || !chat) return;
-
-    const userMessage: ChatMessage = { role: 'user', text: userInput.trim() };
+    const userMessage: ChatMessage = { role: 'user', text: messageText };
     setMessages(prev => [...prev, userMessage]);
     setUserInput('');
     setIsSending(true);
@@ -236,9 +130,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsSending(false);
-      setHasCredit(false); // Use up the credit
     }
   };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userInput.trim() || isSending || !chat) return;
+    sendMessageToApi(userInput.trim());
+  };
+
 
   return (
       <div className="mt-8 border-t-2 border-amber-500/20 pt-6 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
@@ -252,53 +152,27 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ result, horoscope,
             {isSending && <TypingIndicator t={t} />}
             <div ref={messagesEndRef} />
             </div>
-
-            {isPaying && (
-                <div
-                    className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-10 rounded-lg p-6 text-center animate-fade-in"
-                    role="alert"
-                    aria-busy="true"
-                >
-                    <Spinner />
-                    <p className="mt-4 text-lg font-bold text-amber-300">{t('paymentProcessing')}</p>
-                </div>
-            )}
         </div>
         
-        <div className="mt-2">
-            {!hasCredit && <OmiseStatusIndicator status={omiseStatus} t={t} />}
-            <form onSubmit={handleSendMessage} className="flex gap-2">
-            {hasCredit ? (
-                <>
+        <div className="mt-4">
+            <form onSubmit={handleSubmit} className="flex gap-2">
                 <input
-                    ref={inputRef}
                     type="text"
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
                     placeholder={t('chatPlaceholder')}
-                    disabled={isSending || !hasCredit}
+                    disabled={isSending}
                     className="flex-grow p-3 bg-slate-900/70 border border-amber-600/50 rounded-md text-amber-50 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition disabled:opacity-50"
                     aria-label={t('chatPlaceholder')}
                 />
                 <button
                     type="submit"
-                    disabled={isSending || !userInput.trim() || !hasCredit}
+                    disabled={isSending || !userInput.trim()}
                     className="py-3 px-6 bg-amber-600 text-slate-900 font-bold rounded-lg shadow-md hover:bg-amber-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
                     aria-label={t('chatSendButton')}
                 >
                     {t('chatSendButton')}
                 </button>
-                </>
-            ) : (
-                <button
-                type="button"
-                onClick={triggerPayment}
-                disabled={isSending || isPaying || omiseStatus !== 'ready'}
-                className="w-full py-3 px-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-500 hover:shadow-lg hover:shadow-green-500/20 transform hover:-translate-y-1 transition-all duration-300 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-wait disabled:transform-none"
-                >
-                {t('paymentPrompt')}
-                </button>
-            )}
             </form>
         </div>
       </div>
