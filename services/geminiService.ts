@@ -1,4 +1,7 @@
 
+
+
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { DAYS_OF_WEEK } from '../constants';
 import type { MahaboteResult, HoroscopeSections, UserInfo, PalmReadingResult } from '../types';
