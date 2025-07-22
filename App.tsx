@@ -1,192 +1,119 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Header } from './components/Header';
-import { CalculatorForm } from './components/CalculatorForm';
-import { ResultDisplay } from './components/ResultDisplay';
-import { CrystalBallSpinner } from './components/CrystalBallSpinner';
-import { calculateMahabote, getHoroscopeReading } from './services/geminiService';
-import type { MahaboteResult, HoroscopeSections, UserInfo, Page } from './types';
-import { useLanguage } from './contexts/LanguageContext';
-import { ScrollToTopButton } from './components/ScrollToTopButton';
-import { PalmReader } from './components/PalmReader';
-import { LegalPage } from './components/LegalPage';
-import { CookieConsentBanner } from './components/CookieConsentBanner';
+import React, { useState, useEffect, useMemo } from 'react';
+
+// Helper component for the brand logo
+const LogoIcon: React.FC = () => (
+    <div className="relative mb-8">
+        <img
+            src="brand-icon.png.webp"
+            alt="Hybridus Tarot Logo"
+            className="w-40 h-40 md:w-48 md:h-48 object-contain relative z-10 rounded-lg"
+        />
+        <div className="absolute inset-0 bg-purple-500/30 blur-2xl rounded-full animate-pulse"></div>
+    </div>
+);
+
+
+// Translations for different languages
+const translations = {
+  th: {
+    title: 'Hybridus Tarot ปิดปรับปรุง',
+    subtitle: 'ขออภัยในความไม่สะดวก ขณะนี้เรากำลังปรับปรุงระบบเพื่อประสบการณ์ที่ดียิ่งขึ้น',
+    comingSoonTitle: 'Coming Soon!',
+    comingSoonBody: 'เราจะกลับมาอีกครั้งกับ Hybridus Tarot ในเวอร์ชั่นใหม่ พร้อมการทำนายดวงชะตาจากไพ่ทาโรต์สุดแม่นยำ เตรียมพบกับโชคชะตาของคุณได้เร็วๆ นี้!',
+    footer: 'สงวนลิขสิทธิ์',
+  },
+  en: {
+    title: 'Hybridus Tarot Under Maintenance',
+    subtitle: 'We apologize for the inconvenience. We are currently improving our system for a better experience.',
+    comingSoonTitle: 'Coming Soon!',
+    comingSoonBody: 'We will be back with Hybridus Tarot in a new version, featuring accurate Tarot card predictions. Get ready to discover your destiny soon!',
+    footer: 'All Rights Reserved.',
+  },
+  my: {
+    title: 'Hybridus Tarot ပြုပြင်ထိန်းသိမ်းနေသည်',
+    subtitle: 'အဆင်မပြေမှုအတွက် တောင်းပန်အပ်ပါသည်။ ပိုမိုကောင်းမွန်သောအတွေ့အကြုံအတွက် ကျွန်ုပ်တို့၏စနစ်ကို အဆင့်မြှင့်တင်နေပါသည်။',
+    comingSoonTitle: 'မကြာမီလာမည်!',
+    comingSoonBody: 'Hybridus Tarot ၏ ဗားရှင်းအသစ်ဖြင့် ကျွန်ုပ်တို့ပြန်လည်ရောက်ရှိလာမည်ဖြစ်ပြီး တိကျသော Tarot ကတ်များဖြင့် ဗေဒင်ဟောကိန်းများပါဝင်မည်ဖြစ်ပါသည်။ သင်၏ကံကြမ္မာကို မကြာမီရှာဖွေတွေ့ရှိရန် အသင့်ပြင်ထားပါ။',
+    footer: 'မူပိုင်ခွင့်များရယူပြီး။',
+  }
+};
+
+const languages = Object.keys(translations) as Array<keyof typeof translations>;
+
+// Component to render the animated text content
+interface TextContentProps {
+    content: typeof translations[keyof typeof translations];
+    isFading: boolean;
+}
+
+const TextContent: React.FC<TextContentProps> = ({ content, isFading }) => {
+    const animationClasses = `transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0' : 'opacity-100'}`;
+    
+    // Using min-height helps prevent layout shifts during content changes
+    return (
+        <div className={`${animationClasses} flex flex-col items-center`}>
+            <h1 className="text-4xl md:text-5xl font-bold font-display text-amber-200/90 mb-4 tracking-wider text-center min-h-[4rem] md:min-h-[4.5rem] flex items-center justify-center">
+                {content.title}
+            </h1>
+
+            <p className="text-lg md:text-xl text-gray-300 max-w-lg mb-8 text-center min-h-[6rem] flex items-center justify-center">
+                {content.subtitle}
+            </p>
+
+            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 shadow-lg max-w-md w-full">
+                <h2 className="text-2xl font-bold font-display text-amber-300 mb-2 text-center min-h-[2.5rem] flex items-center justify-center">
+                    {content.comingSoonTitle}
+                </h2>
+                <p className="text-gray-200 text-center min-h-[8rem] flex items-center justify-center">
+                    {content.comingSoonBody}
+                </p>
+            </div>
+        </div>
+    );
+};
+
 
 const App: React.FC = () => {
-  const [result, setResult] = useState<MahaboteResult | null>(null);
-  const [horoscope, setHoroscope] = useState<HoroscopeSections | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [mode, setMode] = useState<'birth' | 'palm'>('birth');
-  const [activePage, setActivePage] = useState<Page>('main');
-  const [showCookieBanner, setShowCookieBanner] = useState<boolean>(false);
-
-  const { lang, t } = useLanguage();
+  const [langIndex, setLangIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    document.documentElement.lang = lang;
-    const title = mode === 'birth' ? t('appTitle') : t('palmReadingTitle');
-    document.title = title;
-  }, [lang, t, mode]);
+    // Set an interval to cycle through languages
+    const languageInterval = setInterval(() => {
+      setIsFading(true); // Trigger the fade-out effect
 
-  useEffect(() => {
-    const consent = localStorage.getItem('cookieConsent');
-    if (consent !== 'true') {
-      setShowCookieBanner(true);
-    }
-  }, []);
-  
-  const handleReset = useCallback(() => {
-    setResult(null);
-    setHoroscope(null);
-    setError('');
-    setIsLoading(false);
-    setUserInfo(null);
+      // Wait for fade-out to complete, then change language and fade back in
+      setTimeout(() => {
+        setLangIndex(prevIndex => (prevIndex + 1) % languages.length);
+        setIsFading(false); // Trigger the fade-in effect
+      }, 500); // This must match the CSS transition duration
+
+    }, 8000); // Change language every 8 seconds (7.5s visible + 0.5s fade)
+
+    // Clear the interval when the component is unmounted to prevent memory leaks
+    return () => clearInterval(languageInterval);
   }, []);
 
-  const handleCalculate = useCallback(async (birthDate: Date, isWednesdayAfternoon: boolean, userInfo: UserInfo) => {
-    setIsLoading(true);
-    setError('');
-    setResult(null);
-    setHoroscope(null);
-    setUserInfo(userInfo);
+  // Memoize the current content to avoid re-calculating on every render
+  const currentContent = useMemo(() => translations[languages[langIndex]], [langIndex]);
+  const currentFooter = useMemo(() => `© ${new Date().getFullYear()} Hybridus Tarot. ${currentContent.footer}`, [currentContent]);
+  const footerAnimationClasses = `transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0' : 'opacity-100'}`;
 
-    try {
-      const mahaboteResult = calculateMahabote(birthDate, isWednesdayAfternoon, lang);
-      setResult(mahaboteResult);
-      
-      const reading = await getHoroscopeReading(mahaboteResult, userInfo, lang);
-      setHoroscope(reading);
-
-    } catch (e) {
-      console.error(e);
-      setError(t('errorFetch'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [lang, t]);
-
-  const handleAcceptCookies = () => {
-    localStorage.setItem('cookieConsent', 'true');
-    setShowCookieBanner(false);
-  };
-
-  const appTitle = mode === 'birth' ? t('appTitle') : t('palmReadingTitle');
-  const appSubtitle = mode === 'birth' ? t('appSubtitle') : t('palmReadingSubtitle');
-
-  const renderMainContent = () => {
-    if (mode === 'birth') {
-      return (
-        <>
-          {(!result && !isLoading) && <CalculatorForm onCalculate={handleCalculate} />}
-          
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center p-8 bg-slate-800/50 backdrop-blur-sm border border-amber-500/30 rounded-lg shadow-2xl animate-fade-in">
-              <CrystalBallSpinner />
-              <p 
-                className="mt-6 text-xl font-bold text-amber-300 tracking-wider animate-pulse"
-                style={{ textShadow: '0 1px 3px rgba(251, 191, 36, 0.5)' }}
-              >
-                {t('calculating')}
-              </p>
-            </div>
-          )}
-
-          {error && (
-            <div className="p-8 text-center bg-red-900/50 border border-red-500/50 rounded-lg">
-              <p className="text-red-300">{error}</p>
-              <button
-                onClick={handleReset}
-                className="mt-4 px-6 py-2 bg-amber-600 text-slate-900 font-bold rounded-md hover:bg-amber-500 transition-colors duration-300"
-              >
-                {t('resetButton')}
-              </button>
-            </div>
-          )}
-
-          {result && userInfo && !isLoading && (
-            <ResultDisplay result={result} horoscope={horoscope} onReset={handleReset} userInfo={userInfo} />
-          )}
-        </>
-      );
-    }
-    
-    if (mode === 'palm') {
-      return <PalmReader />;
-    }
-    
-    return null;
-  };
-
-  const renderPage = () => {
-    if (activePage !== 'main') {
-      const title = t(`${activePage}Title` as any);
-      const content = t(`${activePage}Content` as any);
-      return <LegalPage title={title} content={content} onBack={() => setActivePage('main')} />;
-    }
-
-    return (
-      <>
-        <div className="my-8 flex justify-center">
-            <div className="flex rounded-lg p-1 bg-slate-800/50 border border-amber-500/30 shadow-md">
-              <button
-                onClick={() => { setMode('birth'); handleReset(); }}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-300 ${
-                  mode === 'birth' ? 'bg-amber-600 text-slate-900 shadow' : 'text-amber-200 hover:bg-slate-700/50'
-                }`}
-              >
-                {t('birthDateAstrology')}
-              </button>
-              <button
-                onClick={() => setMode('palm')}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-300 ${
-                  mode === 'palm' ? 'bg-amber-600 text-slate-900 shadow' : 'text-amber-200 hover:bg-slate-700/50'
-                }`}
-              >
-                {t('palmReading')}
-              </button>
-            </div>
-          </div>
-          <main className="max-w-3xl mx-auto">
-            {renderMainContent()}
-          </main>
-      </>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2a0e0e] to-[#1a1a2e] text-amber-50 selection:bg-amber-500 selection:text-slate-900">
-      <div 
-        className="absolute inset-0 bg-repeat bg-center opacity-5" 
-        style={{backgroundImage: 'url(https://www.transparenttextures.com/patterns/traditional-damask.png)'}}
-      ></div>
-      <div className="relative container mx-auto px-4 py-8">
-        <Header 
-          title={appTitle}
-          subtitle={appSubtitle}
-        />
-        
-        {renderPage()}
-        
-        <footer className="text-center mt-12 text-amber-500/60 text-sm">
-          <div className="flex justify-center items-center gap-x-4 mb-3">
-              <button onClick={() => setActivePage('terms')} className="hover:text-amber-300 transition-colors">{t('termsLink')}</button>
-              <span className="text-amber-500/40">•</span>
-              <button onClick={() => setActivePage('privacy')} className="hover:text-amber-300 transition-colors">{t('privacyLink')}</button>
-              <span className="text-amber-500/40">•</span>
-              <button onClick={() => setActivePage('cookie')} className="hover:text-amber-300 transition-colors">{t('cookieLink')}</button>
-          </div>
-          <p className="mt-2 text-amber-500/40">Copyright &copy; {new Date().getFullYear()} hybridus.site. All Rights Reserved.</p>
-        </footer>
-      </div>
-      <ScrollToTopButton />
-      {showCookieBanner && activePage === 'main' && (
-          <CookieConsentBanner
-              onAccept={handleAcceptCookies}
-              onPolicyClick={() => setActivePage('cookie')}
-          />
-      )}
-    </div>
+    <main className="bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white min-h-screen flex flex-col items-center justify-center p-4 text-center overflow-hidden">
+        <div className="animate-fade-in-up flex flex-col items-center">
+            
+            <LogoIcon />
+            
+            <TextContent content={currentContent} isFading={isFading} />
+
+            <footer className="mt-16 text-sm text-gray-500 min-h-[1.25rem]">
+                <p className={footerAnimationClasses}>{currentFooter}</p>
+            </footer>
+
+        </div>
+    </main>
   );
 };
 
