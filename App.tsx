@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 const LogoIcon: React.FC = () => (
     <div className="relative mb-8">
         <img
-            src="brand-icon.png.webp"
+            src="/brand-icon.png.webp"
             alt="Hybridus Tarot Logo"
             className="w-40 h-40 md:w-48 md:h-48 object-contain relative z-10 rounded-lg"
         />
